@@ -38,6 +38,7 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=supabase_anon_key
 NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=supabase_service_role_key
+NEXT_PUBLIC_SITE_URL=localhost:3000
 ```
 
 4. Run the development server:
