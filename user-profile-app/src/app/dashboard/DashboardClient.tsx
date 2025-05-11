@@ -3,9 +3,8 @@
 import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
 import React, { useState } from 'react'
-import { updateProfile, logout } from './actions'
-import { useRouter } from 'next/navigation'
-import { Edit2, Check, X, LogOut } from 'lucide-react'
+import { updateProfile } from './actions'
+import { Edit2, Check, X } from 'lucide-react'
 
 const montserrat = Montserrat({ subsets: ['latin'], weight: ['400','700'], variable: '--font-sans', display: 'swap' })
 
@@ -26,12 +25,6 @@ export default function DashboardClient({ initialProfile }: { initialProfile: Pr
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-
-  const handleLogout = async () => {
-    await logout()
-    router.push('/')
-  }
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,15 +47,6 @@ export default function DashboardClient({ initialProfile }: { initialProfile: Pr
 
   return (
     <div className={`${montserrat.variable} font-sans relative max-w-xl mx-auto p-6 bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl border border-gray-800`}>      
-      {/* Logout Button */}
-      <button
-        onClick={handleLogout}
-        className="absolute top-4 right-4 flex items-center space-x-1 bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-full transition"
-      >
-        <LogOut className="w-4 h-4" />
-        <span className="text-sm">Logout</span>
-      </button>
-
       {error && (
         <motion.div
           initial="hidden"

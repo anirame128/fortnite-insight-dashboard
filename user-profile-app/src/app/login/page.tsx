@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { login, type LoginResponse } from './actions'
 import Link from 'next/link'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -36,7 +37,9 @@ export default function LoginPage() {
     try {
       result = await login(formData)
     } catch {
-      setMessage('Something went wrong. Please try again.')
+      const errorMessage = 'Something went wrong. Please try again.'
+      setMessage(errorMessage)
+      toast.error(errorMessage)
       setLoading(false)
       return
     }
@@ -44,7 +47,9 @@ export default function LoginPage() {
     setLoading(false)
     if (result.status === 'error') {
       setMessage(result.message)
+      toast.error(result.message)
     } else {
+      toast.success('Login successful!')
       router.push('/dashboard')
     }
   }
@@ -110,7 +115,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex justify-between">
-            <Link href="/forgot-password" className="text-sm text-gray-400 hover:text-gray-200">
+            <Link href="/forgot-password" className="block w-full text-sm text-purple-400 hover:text-purple-300 text-right mb-2">
               Forgot password?
             </Link>
           </div>
@@ -125,7 +130,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-gray-400">
-          Don’t have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/signup" className="text-purple-400 hover:text-purple-300">
             Sign up
           </Link>

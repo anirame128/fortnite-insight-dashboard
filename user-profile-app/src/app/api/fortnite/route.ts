@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { chromium }    from 'playwright-chromium'
 
 export async function GET(request: Request) {
   const code = new URL(request.url).searchParams.get('code')
@@ -7,73 +6,96 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Map code is required' }, { status: 400 })
   }
 
-  let browser = null
+  // 1) Fetch the island page HTML
+  const pageRes = await fetch(
+    `https://fortnite.gg/island?code=${encodeURIComponent(code)}`,
+    { headers: { 'User-Agent': 'Mozilla/5.0' } }
+  )
+  if (!pageRes.ok) {
+    return NextResponse.json(
+      { error: `Failed to load island page (${pageRes.status})` },
+      { status: 502 }
+    )
+  }
+  const html = await pageRes.text()
+
+  // 2) Extract internal numeric ID
+  let mapId: string | null = null
+  const favMatch  = html.match(/class=["']favorite["'][^>]*data-id=["'](\d+)["']/)
+  const weekMatch = html.match(/<div[^>]*id=["']chart-week["'][^>]*data-id=["'](\d+)["']/)
+  mapId = favMatch?.[1] || weekMatch?.[1] || null
+
+  if (!mapId) {
+    return NextResponse.json(
+      { error: 'Could not find internal map ID in page HTML' },
+      { status: 500 }
+    )
+  }
+
   try {
-    browser = await chromium.launch({ headless: true })
-    const ctx  = await browser.newContext({
-      userAgent:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' +
-        'AppleWebKit/537.36 (KHTML, like Gecko) ' +
-        'Chrome/120.0.0.0 Safari/537.36'
+    // 3) Fetch the 1-month JSON series
+    const graphUrl = `https://fortnite.gg/player-count-graph?range=1m&id=${mapId}`
+    const graphRes = await fetch(graphUrl, {
+      headers: {
+        'Accept':    'application/json',
+        'Referer':   `https://fortnite.gg/island?code=${encodeURIComponent(code)}`
+      }
     })
-    const page = await ctx.newPage()
-    page.setDefaultNavigationTimeout(120_000)
+    if (!graphRes.ok) {
+      throw new Error(`Graph API returned HTTP ${graphRes.status}`)
+    }
 
-    // 1) go to the island page
-    await page.goto(
-      `https://fortnite.gg/island?code=${encodeURIComponent(code)}`,
-      { waitUntil: 'domcontentloaded' }
-    )
+    const graphJson = await graphRes.json()
+    const data      = graphJson?.data
+    if (!data?.values || !Array.isArray(data.values)) {
+      throw new Error('Invalid graph data format')
+    }
 
-    // 2) grab "Players Right Now"
-    await page.waitForSelector('div.chart-stats-title[data-n]')
-    const dataN = await page.$eval(
-      'div.chart-stats-title[data-n]',
-      el => el.getAttribute('data-n')
-    )
-    const currentPlayers = Number(dataN)
-    if (Number.isNaN(currentPlayers)) throw new Error(`Invalid data-n: ${dataN}`)
-
-    // 3) click the 1M tab & wait for it to become active
-    await page.waitForSelector('.chart-range[data-range="1m"]')
-    await page.click('.chart-range[data-range="1m"]')
-    await page.waitForSelector('.chart-range[data-range="1m"].chart-range-active', { timeout: 5000 })
-
-    // 4) now wait until the very first cell in the month-table contains a comma (e.g. "Sunday, May 11")
-    await page.waitForFunction(() => {
-      const cell = document.querySelector(
-        '#chart-month-table tbody tr:not(.no-sort) td'
-      )
-      return !!cell && /,/.test(cell.textContent || '')
-    }, { timeout: 10000 })
-
-    // 5) bump DataTables to 30 rows
-    await page.evaluate(() => {
-      const dt = (window as any).jQuery?.('#chart-month-table')?.DataTable?.()
-      if (dt) dt.page.len(30).draw()
+    // 4) Build daily aggregated data
+    const { start, step, values } = data
+    
+    // Create a map to store daily peaks
+    const dailyPeaks = new Map<string, { peak: number, timestamp: number }>()
+    
+    values.forEach((val: number, i: number) => {
+      const ms = (start + step * i) * 1000
+      const dt = new Date(ms)
+      const dateKey = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      
+      // Update peak if this value is higher or if it's the first entry for this day
+      const current = dailyPeaks.get(dateKey)
+      if (!current || val > current.peak) {
+        dailyPeaks.set(dateKey, { peak: val, timestamp: ms })
+      }
     })
-    await page.waitForTimeout(300)
 
-    // 6) scrape your labels & peaks
-    const rows = await page.$$eval(
-      '#chart-month-table tbody tr:not(.no-sort)',
-      trs => trs.map(tr => {
-        const [dayTd, peakTd] = Array.from(tr.querySelectorAll('td'))
-        return {
-          day:  dayTd.textContent?.trim() ?? '',
-          peak: parseInt(peakTd.getAttribute('data-sort') || '0',  10) || 0
-        }
-      })
+    // Convert map to arrays, sorted by timestamp
+    const sortedEntries = Array.from(dailyPeaks.entries())
+      .sort((a, b) => a[1].timestamp - b[1].timestamp)
+
+    const labels: string[] = []
+    const dailyHistory: number[] = []
+    const timestamps: number[] = []
+
+    sortedEntries.forEach(([dateKey, { peak, timestamp }]) => {
+      labels.push(dateKey)
+      dailyHistory.push(peak)
+      timestamps.push(timestamp)
+    })
+
+    const currentPlayers = dailyHistory[dailyHistory.length - 1] || 0
+
+    return NextResponse.json({
+      currentPlayers,
+      labels,
+      dailyHistory,
+      timestamps
+    })
+  } catch (err: unknown) {
+    console.error('[fortnite API] Error fetching graph:', err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Failed to fetch map statistics' },
+      { status: 500 }
     )
-
-    const labels       = rows.map(r => r.day)
-    const dailyHistory = rows.map(r => r.peak)
-
-    return NextResponse.json({ currentPlayers, labels, dailyHistory })
-  } catch (err: any) {
-    console.error('[fortnite] Error:', err)
-    return NextResponse.json({ error: 'Failed to fetch map statistics' }, { status: 500 })
-  } finally {
-    if (browser) await browser.close()
   }
 }

@@ -43,7 +43,7 @@ export default function SignUpPage() {
     if (result.status === 'error') {
       setMessage(result.message)
     } else {
-      setMessage('✅ Check your email to confirm your account.')
+      setMessage(result.message || '✅ Check your email to confirm your account.')
     }
   }
 
@@ -66,7 +66,7 @@ export default function SignUpPage() {
         {message && (
           <div
             className={`mb-4 p-3 rounded ${
-              message.startsWith('✅')
+              /check your email|verify your account/i.test(message)
                 ? 'bg-green-800 text-green-200'
                 : 'bg-red-800 text-red-200'
             }`}

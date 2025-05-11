@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { User, BarChart, LogOut } from 'lucide-react'
 import { logout } from './actions'
+import { toast } from 'react-hot-toast'
 
 // Load Montserrat font
 const montserrat = Montserrat({
@@ -23,8 +24,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
 
   const handleLogout = async () => {
-    await logout()
-    router.push('/')
+    try {
+      await logout()
+      toast.success('Logged out successfully')
+      router.push('/')
+    } catch (error) {
+      toast.error('Failed to logout. Please try again.')
+    }
   }
 
   const navItems = [
@@ -64,14 +70,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
             )
           })}
+          <button
+            onClick={handleLogout}
+            className="flex items-center space-x-3 px-4 py-2 rounded-lg transition w-full bg-red-600 hover:bg-red-500 text-white"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="font-medium">Logout</span>
+          </button>
         </nav>
-        <button
-          onClick={handleLogout}
-          className="mt-auto flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition"
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="font-medium">Logout</span>
-        </button>
       </aside>
 
       {/* Main content area */}

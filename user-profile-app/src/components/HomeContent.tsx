@@ -3,7 +3,7 @@
 import { Montserrat } from 'next/font/google'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import React, { useState, useEffect } from 'react'
-import { Menu, X, TrendingUp, Clock, Bell, User, ArrowUp } from 'lucide-react'
+import { Menu, X, TrendingUp, Clock, User, ArrowUp } from 'lucide-react'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -37,6 +37,16 @@ export default function HomeContent() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Prevent background scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isMenuOpen])
+
   return (
     <div className={`${montserrat.variable} font-sans bg-black text-white flex flex-col overflow-hidden`}>
       {/* Progress Bar */}
@@ -46,23 +56,27 @@ export default function HomeContent() {
       />
 
       {/* Header */}
-      <header className={`sticky top-0 z-40 transition-colors duration-300 ${isScrolled ? 'bg-black' : 'bg-black/80 backdrop-blur-md'}`}>
+      <header className={`sticky top-0 z-40 transition-colors duration-300 shadow-lg ${isScrolled ? 'bg-black' : 'bg-black/80 backdrop-blur-md'}`}>
         <div className="flex items-center justify-between px-6 py-4">
-          <motion.h2
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            transition={{ duration: 0.5 }}
-            className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-200"
-          >
-            Fortnite Insights
-          </motion.h2>
-          <nav className="hidden md:flex space-x-6">
-            {['Features', 'Testimonials', 'Contact'].map((link, i) => (
+          <motion.div className="flex items-center gap-2">
+            {/* Logo/Icon removed */}
+            <motion.h2
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              transition={{ duration: 0.5 }}
+              className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-200"
+            >
+              Fortnite Insights
+            </motion.h2>
+          </motion.div>
+          <nav className="hidden md:flex space-x-6" aria-label="Main navigation">
+            {['Features', 'Testimonials', 'Contact'].map(link => (
               <button
                 key={link}
                 onClick={() => scrollTo(link.toLowerCase())}
                 className="relative font-medium text-gray-300 hover:text-white transition"
+                aria-label={`Scroll to ${link}`}
               >
                 {link}
                 <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-indigo-500 transition-all group-hover:w-full"></span>
@@ -91,33 +105,38 @@ export default function HomeContent() {
               Sign Up
             </motion.a>
           </div>
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </header>
       {isMenuOpen && (
-        <motion.nav
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="bg-black/95 backdrop-blur-md px-6 py-4 md:hidden"
-        >
-          <div className="flex flex-col space-y-3">
-            {['Features', 'Testimonials', 'Contact'].map(link => (
-              <button
-                key={link}
-                onClick={() => { scrollTo(link.toLowerCase()); setIsMenuOpen(false) }}
-                className="text-gray-300 hover:text-white py-2 text-left"
-              >
-                {link}
-              </button>
-            ))}
-            <a href="/signup" className="mt-4 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-center font-semibold">
-              Sign Up
-            </a>
-          </div>
-        </motion.nav>
+        <>
+          <motion.div className="fixed inset-0 bg-black/60 z-30" onClick={() => setIsMenuOpen(false)} />
+          <motion.nav
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="bg-black/95 backdrop-blur-md px-6 py-4 md:hidden fixed top-0 left-0 right-0 z-40"
+            aria-label="Mobile navigation"
+          >
+            <div className="flex flex-col space-y-3">
+              {['Features', 'Testimonials', 'Contact'].map(link => (
+                <button
+                  key={link}
+                  onClick={() => { scrollTo(link.toLowerCase()); setIsMenuOpen(false) }}
+                  className="text-gray-300 hover:text-white py-2 text-left"
+                  aria-label={`Scroll to ${link}`}
+                >
+                  {link}
+                </button>
+              ))}
+              <a href="/signup" className="mt-4 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-center font-semibold">
+                Sign Up
+              </a>
+            </div>
+          </motion.nav>
+        </>
       )}
 
       {/* Hero */}
@@ -135,7 +154,7 @@ export default function HomeContent() {
           animate="visible"
           variants={fadeInUp}
           transition={{ duration: 0.8 }}
-          className="relative text-6xl md:text-8xl font-extrabold mb-6 leading-tight"
+          className="relative text-6xl md:text-8xl font-extrabold mb-4 leading-tight"
         >
           Personal Fortnite Map Dashboard
         </motion.h1>
@@ -144,7 +163,16 @@ export default function HomeContent() {
           animate="visible"
           variants={fadeInUp}
           transition={{ duration: 0.9 }}
-          className="relative max-w-3xl text-gray-300 text-lg mb-10"
+          className="relative max-w-3xl text-gray-300 text-xl mb-6"
+        >
+          The ultimate tool for Fortnite creative map enthusiasts.
+        </motion.p>
+        <motion.p
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
+          transition={{ duration: 1.0 }}
+          className="relative max-w-3xl text-gray-400 text-lg mb-10"
         >
           Customize your profile, enter any creative map code, and unlock real-time & historical player stats with 30-day forecasts—all in one sleek interface.
         </motion.p>
@@ -152,7 +180,7 @@ export default function HomeContent() {
           initial="hidden"
           animate="visible"
           variants={fadeInUp}
-          transition={{ duration: 1.0 }}
+          transition={{ duration: 1.1 }}
           className="relative flex flex-col sm:flex-row gap-6"
         >
           <a
@@ -188,17 +216,17 @@ export default function HomeContent() {
           viewport={{ once: true }}
           variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.2 } } }}
         >
-          <motion.div variants={cardHover} whileHover="hover" className="p-8 bg-gray-800/70 rounded-2xl backdrop-blur-sm">
+          <motion.div variants={cardHover} whileHover="hover" className="p-8 bg-gray-800/70 rounded-2xl backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:shadow-2xl">
             <User className="w-14 h-14 mx-auto text-purple-400 mb-4" />
             <h3 className="text-2xl font-semibold mb-2">Profile Management</h3>
             <p className="text-gray-400">Seamlessly update your display name and bio within your personal dashboard.</p>
           </motion.div>
-          <motion.div variants={cardHover} whileHover="hover" className="p-8 bg-gray-800/70 rounded-2xl backdrop-blur-sm">
+          <motion.div variants={cardHover} whileHover="hover" className="p-8 bg-gray-800/70 rounded-2xl backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:shadow-2xl">
             <TrendingUp className="w-14 h-14 mx-auto text-indigo-400 mb-4" />
             <h3 className="text-2xl font-semibold mb-2">Live Map Insights</h3>
             <p className="text-gray-400">Input any Fortnite creative code to view live & historical player statistics.</p>
           </motion.div>
-          <motion.div variants={cardHover} whileHover="hover" className="p-8 bg-gray-800/70 rounded-2xl backdrop-blur-sm">
+          <motion.div variants={cardHover} whileHover="hover" className="p-8 bg-gray-800/70 rounded-2xl backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:shadow-2xl">
             <Clock className="w-14 h-14 mx-auto text-blue-400 mb-4" />
             <h3 className="text-2xl font-semibold mb-2">30-Day Forecasts</h3>
             <p className="text-gray-400">Leverage clear, easy-to-read projections of player trends for the next month.</p>
@@ -217,8 +245,8 @@ export default function HomeContent() {
             { name: 'Alex G.', quote: 'This dashboard revolutionized how I track my favorite maps — the forecasts are spot on!' },
             { name: 'Jamie L.', quote: 'Instant insights and easy profile management make this tool a must-have for any creator.' }
           ].map((t, i) => (
-            <motion.div variants={fadeInUp} key={i} className="p-8 bg-gray-800/60 rounded-2xl backdrop-blur-sm">
-              <p className="italic text-gray-300 mb-4">“{t.quote}”</p>
+            <motion.div variants={fadeInUp} key={i} className="p-8 bg-gray-800/60 rounded-2xl backdrop-blur-sm flex flex-col items-center">
+              <p className="italic text-gray-300 mb-4 text-center">“{t.quote}”</p>
               <p className="font-semibold text-white">— {t.name}</p>
             </motion.div>
           ))}
@@ -233,20 +261,33 @@ export default function HomeContent() {
         <motion.p initial="hidden" whileInView="visible" variants={fadeInUp} transition={{ duration: 0.8 }} className="text-gray-400 mb-8">
           Join thousands of players leveraging real-time data and forecasts to stay ahead in Fortnite creative.
         </motion.p>
-        <motion.a
-          href="/signup"
-          initial="hidden"
-          whileInView="visible"
-          variants={fadeInUp}
-          transition={{ duration: 1.0 }}
-          className="px-10 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-bold shadow-xl hover:from-purple-500 hover:to-indigo-500 transition"
-        >
-          Create Free Account
-        </motion.a>
+        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <motion.a
+            href="/signup"
+            initial="hidden"
+            whileInView="visible"
+            variants={fadeInUp}
+            transition={{ duration: 1.0 }}
+            className="px-10 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full font-bold shadow-xl hover:from-purple-500 hover:to-indigo-500 transition"
+          >
+            Create Free Account
+          </motion.a>
+          <motion.a
+            href="mailto:support@fortniteinsights.com"
+            initial="hidden"
+            whileInView="visible"
+            variants={fadeInUp}
+            transition={{ duration: 1.1 }}
+            className="px-10 py-4 border-2 border-indigo-500 rounded-full font-bold text-indigo-300 hover:bg-indigo-500/20 transition"
+          >
+            Contact Us
+          </motion.a>
+        </div>
       </section>
 
       {/* Scroll To Top */}
       <button
+        aria-label="Scroll to top"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         className="fixed bottom-6 right-6 p-3 bg-indigo-600 rounded-full shadow-lg hover:bg-indigo-500 transition"
       >

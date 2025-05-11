@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
@@ -24,9 +23,13 @@ export async function login(formData: FormData): Promise<LoginResponse> {
         return { status: 'error', message: 'Server error' }
     }
 
-    if(!users.some(user => user.email === email)) {
+    const user = users.find(user => user.email === email)
+    if (!user) {
         return { status: 'error', message: 'Email does not exist' }
-    }      
+    }
+    if (!user.email_confirmed_at) {
+        return { status: 'error', message: 'Please verify your email before logging in. Check your inbox for a confirmation link.' }
+    }
 
     const supabase = await createClient()
     const { error: signInErr } = await supabase.auth.signInWithPassword({
