@@ -1,7 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { Montserrat } from 'next/font/google'
+import { motion } from 'framer-motion'
+import React, { useState } from 'react'
 import { updateProfile } from '../actions'
+import { Edit2, Check, X } from 'lucide-react'
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['400','700'],
+  variable: '--font-sans',
+  display: 'swap'
+})
+
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+}
 
 interface Profile {
   id: string
@@ -38,39 +53,95 @@ export default function ProfileClient({
     }
   }
 
-  if (!profile) return <p>Loading profile...</p>
+  if (!profile) {
+    return (
+      <p className={`${montserrat.variable} font-sans text-gray-400`}>
+        Loading profile...
+      </p>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      {error && <div className="bg-red-900/80 p-4 text-red-200 rounded-lg border border-red-700">{error}</div>}
+    <motion.div
+      className={`${montserrat.variable} font-sans relative max-w-xl mx-auto p-6 bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl border border-gray-800`}
+      initial="hidden"
+      animate="visible"
+      variants={fadeIn}
+      transition={{ duration: 0.4 }}
+    >
+      {error && (
+        <motion.div
+          className="mb-4 p-3 bg-red-800 text-red-200 rounded-lg border border-red-700"
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          transition={{ duration: 0.3 }}
+        >
+          {error}
+        </motion.div>
+      )}
+
+      <motion.h2
+        className="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-2"
+        initial="hidden"
+        animate="visible"
+        variants={fadeIn}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        Your Profile
+      </motion.h2>
 
       {isEditing ? (
-        <form onSubmit={onSubmit} className="space-y-6">
+        <motion.form
+          onSubmit={onSubmit}
+          className="space-y-6"
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
           <div>
-            <label htmlFor="display_name" className="block mb-1 text-white/70 font-medium">Display Name</label>
+            <label
+              htmlFor="display_name"
+              className="block mb-1 text-gray-400 font-medium"
+            >
+              Display Name
+            </label>
             <input
-              name="display_name"
               id="display_name"
+              name="display_name"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition"
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             />
           </div>
           <div>
-            <label htmlFor="bio" className="block mb-1 text-white/70 font-medium">Bio</label>
+            <label
+              htmlFor="bio"
+              className="block mb-1 text-gray-400 font-medium"
+            >
+              Bio
+            </label>
             <textarea
-              name="bio"
               id="bio"
+              name="bio"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               maxLength={200}
-              className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition"
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{bio.length}/200</p>
+            <p className="text-xs text-gray-500 mt-1 text-right">
+              {bio.length}/200
+            </p>
           </div>
           <div className="flex gap-4">
-            <button type="submit" disabled={loading} className="flex-1 bg-white text-black px-4 py-2 rounded-lg font-semibold shadow hover:bg-gray-200 transition">
-              Save
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-full font-semibold shadow transition disabled:opacity-50"
+            >
+              <Check className="w-5 h-5 mr-2" />
+              {loading ? 'Saving…' : 'Save'}
             </button>
             <button
               type="button"
@@ -79,30 +150,42 @@ export default function ProfileClient({
                 setDisplayName(profile.display_name ?? '')
                 setBio(profile.bio ?? '')
               }}
-              className="flex-1 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
+              className="flex-1 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full font-semibold shadow transition"
             >
+              <X className="w-5 h-5 mr-2" />
               Cancel
             </button>
           </div>
-        </form>
+        </motion.form>
       ) : (
-        <div className="space-y-6">
+        <motion.div
+          className="space-y-6"
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
           <div>
-            <h3 className="text-lg font-semibold text-white/80">Display Name</h3>
-            <p className="mt-1 text-white/90 text-xl font-mono">{profile.display_name ?? 'Not set'}</p>
+            <h3 className="text-gray-400 font-medium">Display Name</h3>
+            <p className="mt-1 text-white text-xl">
+              {profile.display_name ?? 'Not set'}
+            </p>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white/80">Bio</h3>
-            <p className="mt-1 text-white/90 font-mono whitespace-pre-line">{profile.bio ?? 'No bio yet'}</p>
+            <h3 className="text-gray-400 font-medium">Bio</h3>
+            <p className="mt-1 text-white whitespace-pre-line">
+              {profile.bio ?? 'No bio yet'}
+            </p>
           </div>
           <button
             onClick={() => setIsEditing(true)}
-            className="w-full bg-white text-black px-4 py-2 rounded-lg font-semibold shadow hover:bg-gray-200 transition mt-4"
+            className="flex items-center justify-center w-full bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-full font-semibold shadow transition"
           >
+            <Edit2 className="w-5 h-5 mr-2" />
             Edit Profile
           </button>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
-} 
+}

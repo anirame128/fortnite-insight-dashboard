@@ -1,11 +1,28 @@
 'use client'
 
-import { useState } from 'react'
-import { signup, SignupResponse} from './actions'
+import { Montserrat } from 'next/font/google'
+import { motion } from 'framer-motion'
+import React, { useState } from 'react'
+import { signup, type SignupResponse } from './actions'
+import Link from 'next/link'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+})
+
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+}
 
 export default function SignUpPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -14,7 +31,6 @@ export default function SignUpPage() {
 
     const formData = new FormData(e.currentTarget)
     let result: SignupResponse
-
     try {
       result = await signup(formData)
     } catch {
@@ -24,7 +40,6 @@ export default function SignUpPage() {
     }
 
     setLoading(false)
-
     if (result.status === 'error') {
       setMessage(result.message)
     } else {
@@ -33,70 +48,81 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4">
-      <div className="w-full max-w-md space-y-8 bg-gray-900 p-8 rounded-xl shadow-2xl border border-gray-800">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-white/90 tracking-tight border-b border-gray-800 pb-2">
+    <div className={`${montserrat.variable} font-sans relative flex items-center justify-center min-h-screen bg-black overflow-hidden`}>      
+      {/* Background Gradient */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-gray-900 to-black/80" />
+
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeIn}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 w-full max-w-md p-8 bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl border border-gray-700"
+      >
+        <h2 className="text-center text-3xl font-extrabold text-white mb-6">
           Create your account
         </h2>
 
         {message && (
           <div
-            className={[
-              'mb-4 p-2 rounded',
+            className={`mb-4 p-3 rounded ${
               message.startsWith('✅')
-                ? 'bg-green-100 text-green-700'
-                : 'bg-red-100 text-red-700',
-            ].join(' ')}
+                ? 'bg-green-800 text-green-200'
+                : 'bg-red-800 text-red-200'
+            }`}
           >
             {message}
           </div>
         )}
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-white/70">
-              Email address
-            </label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="relative">
+            <Mail className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500" />
             <input
               id="email"
               name="email"
               type="email"
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-700 rounded-lg shadow-sm bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+              placeholder="Email address"
+              className="w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-white/70">
-              Password
-            </label>
+          <div className="relative">
+            <Lock className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-500" />
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-700 rounded-lg shadow-sm bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition"
+              placeholder="Password"
+              className="w-full pl-10 pr-10 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
             />
-          </div>
-
-          <div className="flex flex-col space-y-3">
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 px-4 bg-white text-black rounded-lg font-semibold shadow hover:bg-gray-200 transition"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500"
             >
-              {loading ? 'Signing up…' : 'Sign up'}
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
-
-            <a
-              href="/login"
-              className="w-full block text-center py-2 border border-gray-700 rounded-lg text-white/70 hover:bg-gray-800 transition"
-            >
-              Already have an account? Sign in
-            </a>
           </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-white font-semibold shadow-lg hover:from-purple-500 hover:to-indigo-500 transition"
+          >
+            {loading ? 'Signing up…' : 'Sign up'}
+          </button>
         </form>
-      </div>
+
+        <p className="mt-6 text-center text-gray-400">
+          Already have an account?{' '}
+          <Link href="/login" className="text-purple-400 hover:text-purple-300">
+            Sign in
+          </Link>
+        </p>
+      </motion.div>
     </div>
   )
 }
