@@ -35,9 +35,9 @@ npm install
 
 3. Create a `.env.local` file in the root directory with your Supabase credentials:
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+NEXT_PUBLIC_SUPABASE_URL=supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=supabase_anon_key
+NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=supabase_service_role_key
 ```
 
 4. Run the development server:

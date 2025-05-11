@@ -51,6 +51,8 @@ const fadeInUp = {
 
 interface StatsResponse {
   currentPlayers: number
+  peak24h: number
+  dailyGain: number
   labels: string[]        // newest→oldest
   dailyHistory: number[]  // newest→oldest
   timestamps: number[]    // ms of each sample
@@ -218,6 +220,8 @@ export default function FortniteStatsPage() {
     }
   }, [stats, histLabels, histData, forecastData])
 
+  const { currentPlayers, peak24h, dailyGain } = stats || { currentPlayers: 0, peak24h: 0, dailyGain: 0 }
+
   return (
     <div className={`${montserrat.variable} font-sans p-6 space-y-8`}>
       {/* Search Form */}
@@ -265,83 +269,50 @@ export default function FortniteStatsPage() {
         </motion.div>
       )}
 
-      {/* Chart Type Selector */}
-      {stats && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          transition={{ duration: 0.4 }}
-          className="max-w-4xl mx-auto flex justify-center"
-        >
-          <div className="relative">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition flex items-center gap-2"
-            >
-              {chartType === 'line' ? (
-                <>
-                  <BarChart3 className="inline-block" />
-                  Line Chart
-                </>
-              ) : (
-                <>
-                  <BarChart2 className="inline-block" />
-                  Bar Chart
-                </>
-              )}
-              <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {isDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 w-full bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden z-10">
-                <button
-                  onClick={() => {
-                    setChartType('line')
-                    setIsDropdownOpen(false)
-                  }}
-                  className={`w-full px-4 py-2 text-left flex items-center gap-2 ${
-                    chartType === 'line' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-700'
-                  }`}
-                >
-                  <BarChart3 className="inline-block" />
-                  Line Chart
-                </button>
-                <button
-                  onClick={() => {
-                    setChartType('bar')
-                    setIsDropdownOpen(false)
-                  }}
-                  className={`w-full px-4 py-2 text-left flex items-center gap-2 ${
-                    chartType === 'bar' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-700'
-                  }`}
-                >
-                  <BarChart2 className="inline-block" />
-                  Bar Chart
-                </button>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      )}
-
       {/* Chart */}
       <div className="space-y-10 w-full max-w-4xl mx-auto my-8">
-        {/* Current Players */}
+        {/* Stats Card */}
         {stats && (
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeInUp}
             transition={{ duration: 0.4 }}
-            className="p-6 bg-gray-800/70 backdrop-blur-md rounded-2xl border border-gray-700 shadow-lg text-center"
+            className="p-6 bg-gray-800/70 backdrop-blur-md rounded-2xl border border-gray-700 shadow-lg"
           >
-            <h3 className="text-lg font-semibold text-gray-200">
-              Players Right Now
-            </h3>
-            <p className="text-4xl font-bold text-white mt-2 drop-shadow-md">
-              {stats.currentPlayers.toLocaleString()}
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Current Players */}
+              <div className="text-center p-4 border-r border-gray-700 last:border-r-0">
+                <h3 className="text-lg font-semibold text-gray-200">
+                  Players Right Now
+                </h3>
+                <p className="text-4xl font-bold text-white mt-2 drop-shadow-md">
+                  {currentPlayers?.toLocaleString()}
+                </p>
+              </div>
+
+              {/* 24-Hour Peak */}
+              <div className="text-center p-4 border-r border-gray-700 last:border-r-0">
+                <h3 className="text-lg font-semibold text-gray-200">
+                  24-Hour Peak
+                </h3>
+                <p className="text-4xl font-bold text-indigo-400 mt-2 drop-shadow-md">
+                  {peak24h.toLocaleString()}
+                </p>
+              </div>
+
+              {/* Gain vs. Yesterday */}
+              <div className="text-center p-4">
+                <h3 className="text-lg font-semibold text-gray-200">
+                  Gain vs. Yesterday
+                </h3>
+                <p className={`text-4xl font-bold mt-2 drop-shadow-md ${
+                  dailyGain >= 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {dailyGain >= 0 ? '+' : ''}{dailyGain.toLocaleString()}
+                </p>
+              </div>
+            </div>
           </motion.div>
         )}
 
@@ -353,9 +324,59 @@ export default function FortniteStatsPage() {
           transition={{ duration: 0.5 }}
           className="p-8 bg-gray-800/80 backdrop-blur-md rounded-2xl border border-gray-700 shadow-xl"
         >
-          <h4 className="text-xl font-semibold text-gray-200 mb-6">
-            Last 30 Days & Forecast
-          </h4>
+          <div className="flex justify-between items-center mb-6">
+            <h4 className="text-xl font-semibold text-gray-200">
+              Last 30 Days & Forecast
+            </h4>
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 transition flex items-center gap-2"
+              >
+                {chartType === 'line' ? (
+                  <>
+                    <BarChart3 className="inline-block" />
+                    Line Chart
+                  </>
+                ) : (
+                  <>
+                    <BarChart2 className="inline-block" />
+                    Bar Chart
+                  </>
+                )}
+                <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {isDropdownOpen && (
+                <div className="absolute top-full right-0 mt-1 w-full bg-gray-800 rounded-lg shadow-lg border border-gray-700 overflow-hidden z-10">
+                  <button
+                    onClick={() => {
+                      setChartType('line')
+                      setIsDropdownOpen(false)
+                    }}
+                    className={`w-full px-4 py-2 text-left flex items-center gap-2 ${
+                      chartType === 'line' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    <BarChart3 className="inline-block" />
+                    Line Chart
+                  </button>
+                  <button
+                    onClick={() => {
+                      setChartType('bar')
+                      setIsDropdownOpen(false)
+                    }}
+                    className={`w-full px-4 py-2 text-left flex items-center gap-2 ${
+                      chartType === 'bar' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    <BarChart2 className="inline-block" />
+                    Bar Chart
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="relative h-72 sm:h-96">
             {(!code && !stats) ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
