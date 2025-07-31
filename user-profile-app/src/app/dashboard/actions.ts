@@ -1,46 +1,23 @@
-// src/app/dashboard/actions.ts
-'use server'
+import { NextResponse } from 'next/server'
 
-import { createClient } from '@/utils/supabase/server'
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-
-export async function updateProfile({
-  display_name,
-  bio,
-}: {
-  display_name: string
-  bio: string
-}) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
-
-  if (userError || !user) {
-    throw new Error('Not authenticated')
-  }
-
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      display_name,
-      bio,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', user.id)
-
-  if (error) {
-    throw new Error('Failed to update profile')
-  }
-
-  revalidatePath('/dashboard/profile')
+export async function updateProfile(profile: any) {
+  // existing code...
 }
 
 export async function logout() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  redirect('/')
+  // existing code...
+}
+
+export async function searchFortniteMaps(searchQuery: string) {
+  try {
+    const response = await fetch(`/api/fortnite?search=${encodeURIComponent(searchQuery)}`)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Fortnite maps: ${response.statusText}`)
+    }
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error searching Fortnite maps:', error)
+    return []
+  }
 }
