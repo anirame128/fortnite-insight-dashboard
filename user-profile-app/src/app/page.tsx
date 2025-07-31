@@ -7,6 +7,15 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (user) {
+    const { data: { theme } } = await supabase
+      .from('profiles')
+      .select('theme')
+      .eq('id', user.id)
+      .single()
+
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    }
     redirect('/dashboard')
   }
 
