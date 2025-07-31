@@ -2,7 +2,7 @@
 
 import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Search, Loader2, BarChart3, BarChart2, ChevronDown } from 'lucide-react'
 import { holtWintersForecast } from '@/utils/forecast'
 import { toast } from 'react-hot-toast'
@@ -59,6 +59,13 @@ interface StatsResponse {
   error?: string
 }
 
+interface MapSearchResult {
+  code: string
+  name: string
+  description: string
+  creator: string
+}
+
 export default function FortniteStatsPage() {
   const [code,    setCode]  = useState('')
   const [stats,   setStats] = useState<StatsResponse | null>(null)
@@ -66,6 +73,10 @@ export default function FortniteStatsPage() {
   const [error,   setError] = useState<string | null>(null)
   const [chartType, setChartType] = useState<'line' | 'bar'>('line')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<MapSearchResult[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
 
   // Load saved map code on component mount
   useEffect(() => {
@@ -111,6 +122,48 @@ export default function FortniteStatsPage() {
     // Save the code to localStorage
     localStorage.setItem('fortniteMapCode', code)
     await fetchStatsWithCode(code)
+  }
+
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout
+    return (...args: any[]) => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => func(...args), delay)
+    }
+  }
+
+  const searchMaps = useCallback(
+    debounce(async (query: string) => {
+      if (!query.trim()) {
+        setSearchResults([])
+        return
+      }
+      setSearchLoading(true)
+      setSearchError(null)
+      try {
+        const res = await fetch(`/api/fortnite/search?q=${encodeURIComponent(query)}`)
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Search failed')
+        setSearchResults(data.results || [])
+      } catch (err: any) {
+        setSearchError(err.message || 'Failed to search maps')
+        setSearchResults([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 300),
+    []
+  )
+
+  useEffect(() => {
+    searchMaps(searchQuery)
+  }, [searchQuery, searchMaps])
+
+  const selectMap = (mapCode: string) => {
+    setCode(mapCode)
+    setSearchQuery('')
+    setSearchResults([])
+    fetchStatsWithCode(mapCode)
   }
 
   // Prepare historical and forecast data
@@ -224,6 +277,56 @@ export default function FortniteStatsPage() {
 
   return (
     <div className={`${montserrat.variable} font-sans p-6 space-y-8`}>
+      {/* Search Bar */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        transition={{ duration: 0.4 }}
+        className="max-w-lg mx-auto"
+      >
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 z-10" />
+          <input
+            type="text"
+            placeholder="Search maps by name or creator..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          />
+          {searchLoading && (
+            <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 animate-spin" />
+          )}
+        </div>
+
+        {searchQuery && (
+          <div className="mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-80 overflow-y-auto">
+            {searchLoading && (
+              <div className="p-4 text-center text-gray-400">Searching...</div>
+            )}
+            {searchError && (
+              <div className="p-4 text-center text-red-400">{searchError}</div>
+            )}
+            {!searchLoading && !searchError && searchResults.length === 0 && (
+              <div className="p-4 text-center text-gray-400">No maps found</div>
+            )}
+            {!searchLoading && !searchError && searchResults.map((map) => (
+              <button
+                key={map.code}
+                onClick={() => selectMap(map.code)}
+                className="w-full text-left p-4 border-b border-gray-700 last:border-b-0 hover:bg-gray-700 transition"
+              >
+                <div className="font-semibold text-white">{map.name}</div>
+                <div className="text-sm text-gray-400">Code: {map.code}</div>
+                <div className="text-sm text-gray-400">Creator: {map.creator}</div>
+                <div className="text-sm text-gray-500 mt-1">{map.description}</div>
+              </button>
+            ))}
+          </div>
+        )}
+      </motion.div>
+
       {/* Search Form */}
       <motion.form
         onSubmit={fetchStats}
