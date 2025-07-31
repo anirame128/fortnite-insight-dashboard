@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
+import { useState, useEffect } from 'react';
 import "./globals.css";
+import { getTheme, setTheme as setThemeUtil } from '../utils/theme';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,11 +25,34 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [theme, setTheme] = useState(getTheme());
+
+  useEffect(() => {
+    const storedTheme = getTheme();
+    if (storedTheme) {
+      setTheme(storedTheme);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    setThemeUtil(newTheme);
+  };
+
   return (
-    <html lang="en">
+    <html lang="en" className={theme}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <header className="fixed top-0 left-0 right-0 p-4 bg-white dark:bg-gray-800 flex justify-end">
+          <button
+            className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 p-2 rounded"
+            onClick={toggleTheme}
+          >
+            {theme === 'light' ? 'Switch to Dark' : 'Switch to Light'}
+          </button>
+        </header>
         {children}
         <Toaster 
           position="top-right"
