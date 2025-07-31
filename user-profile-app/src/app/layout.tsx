@@ -1,3 +1,5 @@
+
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
@@ -50,6 +52,15 @@ export default function RootLayout({
                 secondary: '#fff',
               },
             },
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (localStorage.getItem('theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+              }
+            `,
           }}
         />
       </body>
