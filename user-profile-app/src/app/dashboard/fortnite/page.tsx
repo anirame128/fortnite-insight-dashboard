@@ -2,8 +2,8 @@
 
 import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
-import React, { useState, useMemo, useEffect } from 'react'
-import { Search, Loader2, BarChart3, BarChart2, ChevronDown } from 'lucide-react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import { Search, Loader2, BarChart3, BarChart2, ChevronDown, X } from 'lucide-react'
 import { holtWintersForecast } from '@/utils/forecast'
 import { toast } from 'react-hot-toast'
 import { LineChart } from '@/components/charts/LineChart'
@@ -59,6 +59,13 @@ interface StatsResponse {
   error?: string
 }
 
+interface SearchResult {
+  code: string
+  title: string
+  description: string
+  imageUrl?: string
+}
+
 export default function FortniteStatsPage() {
   const [code,    setCode]  = useState('')
   const [stats,   setStats] = useState<StatsResponse | null>(null)
@@ -66,6 +73,10 @@ export default function FortniteStatsPage() {
   const [error,   setError] = useState<string | null>(null)
   const [chartType, setChartType] = useState<'line' | 'bar'>('line')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false)
 
   // Load saved map code on component mount
   useEffect(() => {
@@ -111,6 +122,56 @@ export default function FortniteStatsPage() {
     // Save the code to localStorage
     localStorage.setItem('fortniteMapCode', code)
     await fetchStatsWithCode(code)
+  }
+
+  // Debounced search function
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout
+    return (...args: any[]) => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => func(...args), delay)
+    }
+  }
+
+  const searchMaps = useCallback(
+    debounce(async (query: string) => {
+      if (!query.trim()) {
+        setSearchResults([])
+        setShowSearchResults(false)
+        return
+      }
+
+      setSearchLoading(true)
+      try {
+        const res = await fetch(`/api/fortnite/search?q=${encodeURIComponent(query)}`)
+        const data = await res.json()
+        if (data.results) {
+          setSearchResults(data.results)
+          setShowSearchResults(true)
+        }
+      } catch (err) {
+        console.error('Search error:', err)
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 300),
+    []
+  )
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchQuery(value)
+    searchMaps(value)
+  }
+
+  const handleSelectMap = (selectedCode: string) => {
+    setCode(selectedCode)
+    setSearchQuery('')
+    setShowSearchResults(false)
+    setSearchResults([])
+    // Save and fetch stats
+    localStorage.setItem('fortniteMapCode', selectedCode)
+    fetchStatsWithCode(selectedCode)
   }
 
   // Prepare historical and forecast data
@@ -255,6 +316,64 @@ export default function FortniteStatsPage() {
           }
         </button>
       </motion.form>
+
+      {/* Map Search */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        transition={{ duration: 0.4 }}
+        className="relative max-w-lg mx-auto"
+      >
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search maps by title or description..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full pl-10 pr-10 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('')
+                setShowSearchResults(false)
+                setSearchResults([])
+              }}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Search Results */}
+        {showSearchResults && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-20 max-h-80 overflow-y-auto">
+            {searchLoading ? (
+              <div className="p-4 flex items-center justify-center">
+                <Loader2 className="animate-spin h-5 w-5 text-gray-400" />
+              </div>
+            ) : searchResults.length > 0 ? (
+              searchResults.map((result) => (
+                <button
+                  key={result.code}
+                  onClick={() => handleSelectMap(result.code)}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-700 transition border-b border-gray-700 last:border-b-0"
+                >
+                  <div className="text-white font-medium">{result.title}</div>
+                  <div className="text-sm text-gray-400">{result.description}</div>
+                  <div className="text-xs text-indigo-400 mt-1">{result.code}</div>
+                </button>
+              ))
+            ) : searchQuery && !searchLoading ? (
+              <div className="p-4 text-center text-gray-400">No maps found</div>
+            ) : null}
+          </div>
+        )}
+      </motion.div>
 
       {/* Error */}
       {error && (
