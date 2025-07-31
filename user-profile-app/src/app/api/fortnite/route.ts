@@ -1,7 +1,10 @@
+```typescript
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   const code = new URL(request.url).searchParams.get('code')
+  const searchQuery = new URL(request.url).searchParams.get('search')
+
   if (!code) {
     return NextResponse.json({ error: 'Map code is required' }, { status: 400 })
   }
@@ -94,19 +97,43 @@ export async function GET(request: Request) {
       ? Math.round(((dailyHistory[len - 1] - prevPeak) / prevPeak) * 1000) / 10
       : 0
 
-    return NextResponse.json({
-      currentPlayers,
-      peak24h,
-      dailyGain,
-      labels,
-      dailyHistory,
-      timestamps
-    })
+    if (searchQuery) {
+      const filteredLabels = labels.filter(label => label.toLowerCase().includes(searchQuery.toLowerCase()))
+      const filteredDailyHistory = dailyHistory.filter((_, index) => filteredLabels.includes(labels[index]))
+      const filteredTimestamps = timestamps.filter((_, index) => filteredLabels.includes(labels[index]))
+
+      return NextResponse.json({
+        currentPlayers,
+        peak24h,
+        dailyGain,
+        labels: filteredLabels,
+        dailyHistory: filteredDailyHistory,
+        timestamps: filteredTimestamps
+      })
+    } else {
+      return NextResponse.json({
+        currentPlayers,
+        peak24h,
+        dailyGain,
+        labels,
+        dailyHistory,
+        timestamps
+      })
+    }
   } catch (err: unknown) {
-    console.error('[fortnite API] Error fetching graph:', err)
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Failed to fetch map statistics' },
-      { status: 500 }
-    )
+    if (err instanceof Error) {
+      console.error('[fortnite API] Error fetching graph:', err.message)
+      return NextResponse.json(
+        { error: `An error occurred: ${err.message}` },
+        { status: 500 }
+      )
+    } else {
+      console.error('[fortnite API] Unknown error fetching graph:', err)
+      return NextResponse.json(
+        { error: 'An unknown error occurred while fetching map statistics' },
+        { status: 500 }
+      )
+    }
   }
 }
+```
