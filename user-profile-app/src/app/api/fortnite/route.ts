@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const code = new URL(request.url).searchParams.get('code')
+  const url = new URL(request.url)
+  const code = url.searchParams.get('code')
+  const mapName = url.searchParams.get('mapName')
+
   if (!code) {
     return NextResponse.json({ error: 'Map code is required' }, { status: 400 })
   }
 
-  // 1) Fetch the island page HTML
+  if (!mapName) {
+    return NextResponse.json({ error: 'Map name is required' }, { status: 400 })
+  }
+
   const pageRes = await fetch(
     `https://fortnite.gg/island?code=${encodeURIComponent(code)}`,
     { headers: { 'User-Agent': 'Mozilla/5.0' } }
@@ -19,18 +25,15 @@ export async function GET(request: Request) {
   }
   const html = await pageRes.text()
 
-  // 2) Extract the "Players right now" count from the stats panel
-  //    Matches: <div class="chart-stats-title" …>11,893</div><div>Players right now</div>
   const nowAttr = html.match(/data-n=["'](\d+)["']/)
   const currentPlayers = nowAttr
     ? parseInt(nowAttr[1], 10)
     : 0
   console.log('currentPlayers', currentPlayers)
 
-  // 3) Extract internal numeric ID for the graph API
   let mapId: string | null = null
   const favMatch  = html.match(/class=["']favorite["'][^>]*data-id=["'](\d+)["']/)
-  const weekMatch = html.match(/<div[^>]*id=["']chart-week["'][^>]*data-id=["'](\d+)["']/)
+  const weekMatch = html.match(/<div[^>]id=["']chart-week["'][^>]data-id=["'](\d+)["']/)
   mapId = favMatch?.[1] || weekMatch?.[1] || null
 
   if (!mapId) {
@@ -41,8 +44,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 4) Fetch the 1-month JSON series
-    const graphUrl = `https://fortnite.gg/player-count-graph?range=1m&id=${mapId}`
+    const graphUrl = `https://fortnite.gg/player-count-graph?range=1m&id=${mapId}&mapName=${encodeURIComponent(mapName)}`
     const graphRes = await fetch(graphUrl, {
       headers: {
         'Accept':  'application/json',
@@ -59,11 +61,10 @@ export async function GET(request: Request) {
       throw new Error('Invalid graph data format')
     }
 
-    // 5) Build daily aggregated peaks as before
     const { start, step, values } = data
     const dailyPeaks = new Map<string, { peak: number, timestamp: number }>()
     values.forEach((val: number, i: number) => {
-      const ms = (start + step * i) * 1000
+      const ms = (start + step  i)  1000
       const dt = new Date(ms)
       const dateKey = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
@@ -85,7 +86,6 @@ export async function GET(request: Request) {
       timestamps.push(timestamp)
     })
 
-    // Calculate 24-hour peak from the most recent day's data
     const peak24h = dailyHistory.length > 0 ? dailyHistory[dailyHistory.length - 1] : 0
 
     const len = dailyHistory.length
@@ -100,7 +100,8 @@ export async function GET(request: Request) {
       dailyGain,
       labels,
       dailyHistory,
-      timestamps
+      timestamps,
+      mapName
     })
   } catch (err: unknown) {
     console.error('[fortnite API] Error fetching graph:', err)
