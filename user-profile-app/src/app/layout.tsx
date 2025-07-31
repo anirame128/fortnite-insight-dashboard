@@ -23,11 +23,35 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [isDarkMode, setIsDarkMode] = React.useState(() => {
+    const storedTheme = localStorage.getItem('theme');
+    return storedTheme === 'dark' ? true : false;
+  });
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    localStorage.setItem('theme', isDarkMode ? 'light' : 'dark');
+  };
+
+  React.useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+  }, [isDarkMode]);
+
   return (
-    <html lang="en">
+    <html lang="en" className={isDarkMode ? 'dark' : ''}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <header className="flex justify-between p-4">
+          <h1 className="text-lg font-bold">User Profile App</h1>
+          <button
+            type="button"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded"
+            onClick={toggleTheme}
+          >
+            {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          </button>
+        </header>
         {children}
         <Toaster 
           position="top-right"
