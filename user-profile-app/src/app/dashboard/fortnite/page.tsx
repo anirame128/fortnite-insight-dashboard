@@ -66,6 +66,10 @@ export default function FortniteStatsPage() {
   const [error,   setError] = useState<string | null>(null)
   const [chartType, setChartType] = useState<'line' | 'bar'>('line')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false)
 
   // Load saved map code on component mount
   useEffect(() => {
@@ -111,6 +115,38 @@ export default function FortniteStatsPage() {
     // Save the code to localStorage
     localStorage.setItem('fortniteMapCode', code)
     await fetchStatsWithCode(code)
+  }
+
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      setShowSearchResults(false)
+      return
+    }
+
+    setSearchLoading(true)
+    setSearchQuery(query)
+    
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      const data = await res.json()
+      setSearchResults(data.results || [])
+      setShowSearchResults(true)
+    } catch (err) {
+      console.error('Search error:', err)
+      setSearchResults([])
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  const selectMap = (mapCode: string) => {
+    setCode(mapCode)
+    setShowSearchResults(false)
+    setSearchResults([])
+    setSearchQuery('')
+    localStorage.setItem('fortniteMapCode', mapCode)
+    fetchStatsWithCode(mapCode)
   }
 
   // Prepare historical and forecast data
@@ -255,6 +291,45 @@ export default function FortniteStatsPage() {
           }
         </button>
       </motion.form>
+
+      {/* Search Bar */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        transition={{ duration: 0.4 }}
+        className="relative max-w-lg mx-auto"
+      >
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search maps by name..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          />
+          {searchLoading && (
+            <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500 animate-spin" />
+          )}
+        </div>
+        
+        {showSearchResults && searchResults.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
+            {searchResults.map((map, index) => (
+              <button
+                key={index}
+                onClick={() => selectMap(map.code)}
+                className="w-full px-4 py-3 text-left hover:bg-gray-700 transition border-b border-gray-700 last:border-b-0"
+              >
+                <div className="text-white font-medium">{map.name}</div>
+                <div className="text-gray-400 text-sm">{map.code}</div>
+              </button>
+            ))}
+          </div>
+        )}
+      </motion.div>
 
       {/* Error */}
       {error && (
