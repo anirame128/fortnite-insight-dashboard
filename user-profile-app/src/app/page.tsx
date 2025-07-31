@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import HomeContent from '@/components/HomeContent'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -10,5 +11,12 @@ export default async function Home() {
     redirect('/dashboard')
   }
 
-  return <HomeContent />
+  return (
+    <div className="relative">
+      <header className="absolute top-0 right-0 p-4">
+        <ThemeToggle />
+      </header>
+      <HomeContent />
+    </div>
+  )
 }
