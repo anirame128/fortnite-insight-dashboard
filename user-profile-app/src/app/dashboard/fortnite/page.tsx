@@ -1,9 +1,9 @@
 'use client'
 
 import { Montserrat } from 'next/font/google'
-import { motion } from 'framer-motion'
-import React, { useState, useMemo, useEffect } from 'react'
-import { Search, Loader2, BarChart3, BarChart2, ChevronDown } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import { Search, Loader2, BarChart3, BarChart2, ChevronDown, X } from 'lucide-react'
 import { holtWintersForecast } from '@/utils/forecast'
 import { toast } from 'react-hot-toast'
 import { LineChart } from '@/components/charts/LineChart'
@@ -59,6 +59,13 @@ interface StatsResponse {
   error?: string
 }
 
+interface SearchResult {
+  title: string
+  code: string
+  description: string
+  image?: string
+}
+
 export default function FortniteStatsPage() {
   const [code,    setCode]  = useState('')
   const [stats,   setStats] = useState<StatsResponse | null>(null)
@@ -66,6 +73,26 @@ export default function FortniteStatsPage() {
   const [error,   setError] = useState<string | null>(null)
   const [chartType, setChartType] = useState<'line' | 'bar'>('line')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  // Search states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false)
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length > 2) {
+        handleSearch(searchQuery)
+      } else {
+        setSearchResults([])
+        setShowSearchResults(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   // Load saved map code on component mount
   useEffect(() => {
@@ -111,6 +138,37 @@ export default function FortniteStatsPage() {
     // Save the code to localStorage
     localStorage.setItem('fortniteMapCode', code)
     await fetchStatsWithCode(code)
+  }
+
+  const handleSearch = useCallback(async (query: string) => {
+    setSearchLoading(true)
+    try {
+      const res = await fetch(`/api/fortnite/search?q=${encodeURIComponent(query)}`)
+      const data = await res.json()
+      if (res.ok && data.results) {
+        setSearchResults(data.results)
+        setShowSearchResults(true)
+      }
+    } catch (err) {
+      console.error('Search error:', err)
+    } finally {
+      setSearchLoading(false)
+    }
+  }, [])
+
+  const handleSelectResult = (result: SearchResult) => {
+    setCode(result.code)
+    setSearchQuery('')
+    setSearchResults([])
+    setShowSearchResults(false)
+    // Auto-fetch stats for selected map
+    fetchStatsWithCode(result.code)
+  }
+
+  const handleClearSearch = () => {
+    setSearchQuery('')
+    setSearchResults([])
+    setShowSearchResults(false)
   }
 
   // Prepare historical and forecast data
@@ -224,6 +282,73 @@ export default function FortniteStatsPage() {
 
   return (
     <div className={`${montserrat.variable} font-sans p-6 space-y-8`}>
+      {/* Search Bar Component */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        transition={{ duration: 0.4 }}
+        className="relative max-w-lg mx-auto"
+      >
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 z-10" />
+          <input
+            type="text"
+            placeholder="Search maps by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-10 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          />
+          {searchQuery && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {showSearchResults && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-full mt-2 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 max-h-80 overflow-y-auto"
+            >
+              {searchLoading ? (
+                <div className="flex items-center justify-center p-4">
+                  <Loader2 className="animate-spin h-5 w-5 text-gray-400" />
+                </div>
+              ) : searchResults.length > 0 ? (
+                searchResults.map((result, index) => (
+                  <motion.button
+                    key={result.code}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => handleSelectResult(result)}
+                    className="w-full text-left p-3 hover:bg-gray-700 transition border-b border-gray-700 last:border-b-0"
+                  >
+                    <div className="font-semibold text-white">{result.title}</div>
+                    <div className="text-sm text-gray-400">{result.code}</div>
+                    {result.description && (
+                      <div className="text-xs text-gray-500 mt-1">{result.description}</div>
+                    )}
+                  </motion.button>
+                ))
+              ) : (
+                <div className="text-center p-4 text-gray-400">
+                  No results found
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       {/* Search Form */}
       <motion.form
         onSubmit={fetchStats}
