@@ -1,8 +1,9 @@
+```ts
 'use client'
 
 import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Search, Loader2, BarChart3, BarChart2, ChevronDown } from 'lucide-react'
 import { holtWintersForecast } from '@/utils/forecast'
 import { toast } from 'react-hot-toast'
@@ -59,6 +60,14 @@ interface StatsResponse {
   error?: string
 }
 
+interface MapSearchResult {
+  code: string
+  name: string
+  creator: string
+  description: string
+  tags: string[]
+}
+
 export default function FortniteStatsPage() {
   const [code,    setCode]  = useState('')
   const [stats,   setStats] = useState<StatsResponse | null>(null)
@@ -66,6 +75,13 @@ export default function FortniteStatsPage() {
   const [error,   setError] = useState<string | null>(null)
   const [chartType, setChartType] = useState<'line' | 'bar'>('line')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  // Search-related state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<MapSearchResult[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null)
 
   // Load saved map code on component mount
   useEffect(() => {
@@ -111,6 +127,55 @@ export default function FortniteStatsPage() {
     // Save the code to localStorage
     localStorage.setItem('fortniteMapCode', code)
     await fetchStatsWithCode(code)
+  }
+
+  // Debounced search function
+  const debouncedSearch = useCallback((query: string) => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout)
+    }
+
+    if (!query.trim()) {
+      setSearchResults([])
+      setSearchError(null)
+      return
+    }
+
+    const timeout = setTimeout(async () => {
+      setSearchLoading(true)
+      setSearchError(null)
+      
+      try {
+        const res = await fetch(`/api/fortnite/search?q=${encodeURIComponent(query)}`)
+        const data = await res.json()
+        
+        if (!res.ok) {
+          throw new Error(data.error || 'Search failed')
+        }
+        
+        setSearchResults(data.results || [])
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Search failed'
+        setSearchError(errorMessage)
+        setSearchResults([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 300)
+
+    setDebounceTimeout(timeout)
+  }, [debounceTimeout])
+
+  // Trigger search on query change
+  useEffect(() => {
+    debouncedSearch(searchQuery)
+  }, [searchQuery, debouncedSearch])
+
+  const handleMapSelect = (mapCode: string) => {
+    setCode(mapCode)
+    setSearchQuery('')
+    setSearchResults([])
+    fetchStatsWithCode(mapCode)
   }
 
   // Prepare historical and forecast data
@@ -224,7 +289,78 @@ export default function FortniteStatsPage() {
 
   return (
     <div className={`${montserrat.variable} font-sans p-6 space-y-8`}>
-      {/* Search Form */}
+      {/* Search Bar Component */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        transition={{ duration: 0.4 }}
+        className="max-w-4xl mx-auto"
+      >
+        <div className="relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search maps by name, creator, or code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            />
+          </div>
+
+          {/* Search Results */}
+          {searchQuery && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+              {searchLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="animate-spin h-6 w-6 text-gray-400" />
+                  <span className="ml-2 text-gray-400">Searching...</span>
+                </div>
+              ) : searchError ? (
+                <div className="p-4 text-center text-red-400">
+                  {searchError}
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="p-4 text-center text-gray-400">
+                  No maps found
+                </div>
+              ) : (
+                <div className="grid gap-2 p-4">
+                  {searchResults.map((map) => (
+                    <motion.div
+                      key={map.code}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 bg-gray-700/50 hover:bg-gray-700 rounded-lg cursor-pointer transition-colors"
+                      onClick={() => handleMapSelect(map.code)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-white">{map.name}</h3>
+                          <p className="text-sm text-gray-400">by {map.creator}</p>
+                          <p className="text-xs text-gray-500 mt-1">{map.description}</p>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {map.tags.map((tag) => (
+                              <span key={tag} className="text-xs bg-gray-600 text-gray-300 px-2 py-1 rounded">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-sm font-mono text-indigo-400">{map.code}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Original Search Form */}
       <motion.form
         onSubmit={fetchStats}
         initial="hidden"
@@ -418,3 +554,4 @@ export default function FortniteStatsPage() {
     </div>
   )
 }
+```
