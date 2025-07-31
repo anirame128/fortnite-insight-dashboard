@@ -1,3 +1,5 @@
+
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
@@ -28,6 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <header className="p-4">
+          <ThemeToggle />
+        </header>
         {children}
         <Toaster 
           position="top-right"
@@ -54,5 +59,45 @@ export default function RootLayout({
         />
       </body>
     </html>
+  );
+}
+
+// Client component for theme toggle
+'use client';
+
+function ThemeToggle() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isDark) {
+      localStorage.setItem('theme', 'dark');
+      document.documentElement.classList.add('dark');
+    } else {
+      localStorage.setItem('theme', 'light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => {
+    setIsDark(prev => !prev);
+  };
+
+  return (
+    <button 
+      onClick={toggleTheme}
+      className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+    >
+      {isDark ? 'Light Mode' : 'Dark Mode'}
+    </button>
   );
 }
