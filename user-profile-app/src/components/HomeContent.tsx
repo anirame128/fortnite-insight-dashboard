@@ -4,6 +4,7 @@ import { Montserrat } from 'next/font/google'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import React, { useState, useEffect } from 'react'
 import { Menu, X, TrendingUp, Clock, User, ArrowUp } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -48,7 +49,7 @@ export default function HomeContent() {
   }, [isMenuOpen])
 
   return (
-    <div className={`${montserrat.variable} font-sans bg-black text-white flex flex-col overflow-hidden`}>
+    <div className={`${montserrat.variable} font-sans bg-[var(--background)] text-[var(--foreground)] flex flex-col overflow-hidden`}>
       {/* Progress Bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 origin-left bg-gradient-to-r from-purple-500 to-indigo-500 z-50"
@@ -56,7 +57,7 @@ export default function HomeContent() {
       />
 
       {/* Header */}
-      <header className={`sticky top-0 z-40 transition-colors duration-300 shadow-lg ${isScrolled ? 'bg-black' : 'bg-black/80 backdrop-blur-md'}`}>
+      <header className={`sticky top-0 z-40 transition-colors duration-300 shadow-lg ${isScrolled ? 'bg-[var(--background)]' : 'bg-[var(--background)]/80 backdrop-blur-md'}`}>
         <div className="flex items-center justify-between px-6 py-4">
           <motion.div className="flex items-center gap-2">
             {/* Logo/Icon removed */}
@@ -65,7 +66,7 @@ export default function HomeContent() {
               animate="visible"
               variants={fadeInUp}
               transition={{ duration: 0.5 }}
-              className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-200"
+              className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[var(--foreground)] to-gray-200"
             >
               Fortnite Insights
             </motion.h2>
@@ -75,7 +76,7 @@ export default function HomeContent() {
               <button
                 key={link}
                 onClick={() => scrollTo(link.toLowerCase())}
-                className="relative font-medium text-gray-300 hover:text-white transition"
+                className="relative font-medium text-gray-300 hover:text-[var(--foreground)] transition"
                 aria-label={`Scroll to ${link}`}
               >
                 {link}
@@ -83,14 +84,14 @@ export default function HomeContent() {
               </button>
             ))}
           </nav>
-          <div className="hidden md:flex space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             <motion.a
               href="/login"
               initial="hidden"
               animate="visible"
               variants={fadeInUp}
               transition={{ duration: 0.6 }}
-              className="px-5 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-full transition"
+              className="px-5 py-2 text-gray-300 hover:text-[var(--foreground)] hover:bg-gray-800 rounded-full transition"
             >
               Log In
             </motion.a>
@@ -104,10 +105,16 @@ export default function HomeContent() {
             >
               Sign Up
             </motion.a>
+            <ThemeToggle />
           </div>
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="md:hidden">
+              <ThemeToggle />
+            </div>
+            <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </header>
       {isMenuOpen && (
@@ -117,7 +124,7 @@ export default function HomeContent() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="bg-black/95 backdrop-blur-md px-6 py-4 md:hidden fixed top-0 left-0 right-0 z-40"
+            className="bg-[var(--background)]/95 backdrop-blur-md px-6 py-4 md:hidden fixed top-0 left-0 right-0 z-40"
             aria-label="Mobile navigation"
           >
             <div className="flex flex-col space-y-3">
@@ -125,7 +132,7 @@ export default function HomeContent() {
                 <button
                   key={link}
                   onClick={() => { scrollTo(link.toLowerCase()); setIsMenuOpen(false) }}
-                  className="text-gray-300 hover:text-white py-2 text-left"
+                  className="text-gray-300 hover:text-[var(--foreground)] py-2 text-left"
                   aria-label={`Scroll to ${link}`}
                 >
                   {link}
@@ -199,7 +206,7 @@ export default function HomeContent() {
       </motion.main>
 
       {/* Features */}
-      <section id="features" className="py-20 px-6 bg-gradient-to-b from-black to-gray-900">
+      <section id="features" className="py-20 px-6 bg-gradient-to-b from-[var(--background)] to-gray-900">
         <motion.h2
           initial="hidden"
           whileInView="visible"
@@ -235,7 +242,7 @@ export default function HomeContent() {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-20 px-6 bg-black">
+      <section id="testimonials" className="py-20 px-6 bg-[var(--background)]">
         <motion.h2 initial="hidden" whileInView="visible" variants={fadeInUp} transition={{ duration: 0.6 }} className="text-4xl font-bold text-center mb-14">
           What Players Say
         </motion.h2>
@@ -246,7 +253,7 @@ export default function HomeContent() {
             { name: 'Jamie L.', quote: 'Instant insights and easy profile management make this tool a must-have for any creator.' }
           ].map((t, i) => (
             <motion.div variants={fadeInUp} key={i} className="p-8 bg-gray-800/60 rounded-2xl backdrop-blur-sm flex flex-col items-center">
-              <p className="italic text-gray-300 mb-4 text-center">“{t.quote}”</p>
+              <p className="italic text-gray-300 mb-4 text-center">" {t.quote} "</p>
               <p className="font-semibold text-white">— {t.name}</p>
             </motion.div>
           ))}
@@ -254,7 +261,7 @@ export default function HomeContent() {
       </section>
 
       {/* Contact CTA */}
-      <section id="contact" className="py-20 px-6 bg-gradient-to-t from-gray-900 to-black text-center">
+      <section id="contact" className="py-20 px-6 bg-gradient-to-t from-gray-900 to-[var(--background)] text-center">
         <motion.h2 initial="hidden" whileInView="visible" variants={fadeInUp} transition={{ duration: 0.6 }} className="text-4xl font-bold mb-6">
           Ready to Dominate?
         </motion.h2>
@@ -295,7 +302,7 @@ export default function HomeContent() {
       </button>
 
       {/* Footer */}
-      <footer className="py-8 text-center text-gray-500 bg-black/90">
+      <footer className="py-8 text-center text-gray-500 bg-[var(--background)]/90">
         <p>© 2025 Fortnite Insights. All rights reserved.</p>
       </footer>
     </div>
