@@ -2,7 +2,7 @@
 
 import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { updateProfile } from '../actions'
 import { Edit2, Check, X, User2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -39,13 +39,21 @@ export default function ProfileClient({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (initialProfile) {
+      setProfile(initialProfile)
+      setDisplayName(initialProfile.display_name ?? '')
+      setBio(initialProfile.bio ?? '')
+    }
+  }, [initialProfile])
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
-      await updateProfile({ display_name: displayName, bio })
-      setProfile({ ...profile!, display_name: displayName, bio })
+      const updatedProfile = await updateProfile({ display_name: displayName, bio })
+      setProfile(updatedProfile)
       setIsEditing(false)
       toast.success('Profile updated successfully!')
     } catch (err: any) {
