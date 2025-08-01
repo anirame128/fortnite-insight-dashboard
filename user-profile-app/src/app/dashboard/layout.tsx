@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { User, BarChart, LogOut } from 'lucide-react'
 import { logout } from './actions'
 import { toast } from 'react-hot-toast'
+import ExternalLinkButton from '@/components/ExternalLinkButton'
 
 // Load Montserrat font
 const montserrat = Montserrat({
@@ -70,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
             )
           })}
+          <ExternalLinkButton url="https://fortnite.gg/creative" label="Creative Maps" />
           <button
             onClick={handleLogout}
             className="flex items-center space-x-3 px-4 py-2 rounded-lg transition w-full bg-red-600 hover:bg-red-500 text-white"
