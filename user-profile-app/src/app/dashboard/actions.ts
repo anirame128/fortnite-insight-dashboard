@@ -44,3 +44,12 @@ export async function logout() {
   await supabase.auth.signOut()
   redirect('/')
 }
+
+export async function handleProfileUpdate(data: { display_name: string; bio: string }) {
+  try {
+    await updateProfile(data)
+    return { success: true }
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'Unknown error' }
+  }
+}

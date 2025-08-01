@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import React, { useState } from 'react'
 import { updateProfile } from './actions'
 import { Edit2, Check, X } from 'lucide-react'
+import { toast } from 'react-toastify'
 
 const montserrat = Montserrat({ subsets: ['latin'], weight: ['400','700'], variable: '--font-sans', display: 'swap' })
 
@@ -34,8 +35,10 @@ export default function DashboardClient({ initialProfile }: { initialProfile: Pr
       await updateProfile({ display_name: displayName, bio })
       setProfile({ ...profile!, display_name: displayName, bio })
       setIsEditing(false)
+      toast.success('Profile updated successfully!')
     } catch (error: any) {
       setError(error.message)
+      toast.error(`Error: ${error.message}`)
     } finally {
       setLoading(false)
     }

@@ -6,6 +6,7 @@ import React, { useState } from 'react'
 import { updateProfile } from '../actions'
 import { Edit2, Check, X, User2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { useProfileSettings } from './hooks/useProfileSettings'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -32,30 +33,7 @@ export default function ProfileClient({
 }: {
   initialProfile: Profile | null
 }) {
-  const [profile, setProfile] = useState(initialProfile)
-  const [displayName, setDisplayName] = useState(profile?.display_name ?? '')
-  const [bio, setBio] = useState(profile?.bio ?? '')
-  const [isEditing, setIsEditing] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    try {
-      await updateProfile({ display_name: displayName, bio })
-      setProfile({ ...profile!, display_name: displayName, bio })
-      setIsEditing(false)
-      toast.success('Profile updated successfully!')
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to update profile'
-      setError(errorMessage)
-      toast.error(errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { profile, setProfile, displayName, setDisplayName, bio, setBio, isEditing, setIsEditing, loading, error, onSubmit } = useProfileSettings(initialProfile);
 
   if (!profile) {
     return (
