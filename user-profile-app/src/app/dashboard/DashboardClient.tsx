@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import React, { useState } from 'react'
 import { updateProfile } from './actions'
 import { Edit2, Check, X } from 'lucide-react'
+import CreativeMapsButton from './components/CreativeMapsButton' // Import the new button component
 
 const montserrat = Montserrat({ subsets: ['latin'], weight: ['400','700'], variable: '--font-sans', display: 'swap' })
 
@@ -46,7 +47,9 @@ export default function DashboardClient({ initialProfile }: { initialProfile: Pr
   }
 
   return (
-    <div className={`${montserrat.variable} font-sans relative max-w-xl mx-auto p-6 bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl border border-gray-800`}>      
+    <div className={`${montserrat.variable} font-sans relative max-w-xl mx-auto p-6 bg-gray-900/70 backdrop-blur-md rounded-2xl shadow-xl border border-gray-800`}>
+      <CreativeMapsButton /> {/* Include the new button in the layout */}
+
       {error && (
         <motion.div
           initial="hidden"

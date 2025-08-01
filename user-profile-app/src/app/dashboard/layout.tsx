@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { User, BarChart, LogOut } from 'lucide-react'
 import { logout } from './actions'
 import { toast } from 'react-hot-toast'
+import CreativeMapsButton from './components/CreativeMapsButton' // Importing the new button
 
 // Load Montserrat font
 const montserrat = Montserrat({
@@ -84,6 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex-1 flex flex-col">
         <main className="flex-1 overflow-auto p-8">        
           {children}
+          <CreativeMapsButton /> {/* Adding the CreativeMapsButton to the layout */}
         </main>
         <footer className="bg-black/80 text-gray-500 text-center py-4 border-t border-gray-800">
           <motion.p

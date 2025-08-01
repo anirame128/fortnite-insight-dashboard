@@ -1,5 +1,14 @@
-import { redirect } from 'next/navigation'
+'use client';
+
+import { redirect } from 'next/navigation';
+import CreativeMapsButton from './components/CreativeMapsButton';
 
 export default function DashboardPage() {
-  redirect('/dashboard/profile')
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <CreativeMapsButton />
+      {/* Other components and content */}
+    </div>
+  );
 }
