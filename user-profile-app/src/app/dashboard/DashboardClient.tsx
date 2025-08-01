@@ -1,3 +1,37 @@
+<think>
+Okay, so I need to add a navigation link to the settings page in the DashboardClient.tsx file. Let me think about how to approach this.
+
+First, I'll look at the existing code. The component is a Next.js client component because it uses 'use client'. It's a profile dashboard that allows users to edit their display name and bio. The main UI has a form that toggles between edit and view modes.
+
+I need to add a link to the settings page. Since it's a Next.js app, I should use the Next.js Link component for client-side navigation. So, I'll need to import Link from 'next/link'.
+
+Looking at the structure, the profile section is followed by an edit button. I can add the settings link after that. It makes sense to place it near the bottom for better flow.
+
+I'll create a new button or a link element. Using Tailwind CSS, I'll style it to match the existing buttons. Maybe a secondary color like gray to differentiate it from the edit button.
+
+I should also consider the dark mode. Since the project uses CSS variables, I'll ensure the link's text color is readable in both themes. Maybe using a hover effect for better UX.
+
+So, the steps are:
+
+1. Import Link from 'next/link'.
+2. Add a new Link component after the edit profile section.
+3. Style the link with appropriate Tailwind classes.
+4. Ensure it navigates to the correct path, probably '/settings'.
+
+I should check if the settings page exists and what the correct route is. Assuming it's under the same app directory, the href should be '/settings'.
+
+Now, I'll modify the code. I'll add the import statement for Link. Then, in the JSX, after the edit profile button, I'll insert a new motion.div or maybe a button wrapped in a Link.
+
+Wait, the edit profile button is a motion.button. To maintain consistency, I'll use a similar structure for the settings link. Maybe another motion.button inside a Link.
+
+I'll also add some transition effects to make it smooth. The existing buttons have transitions, so I'll apply similar classes.
+
+Testing the code after adding the link to ensure it works and doesn't break the layout. Also, check that the link correctly navigates to the settings page.
+
+I think that's all. Now, I'll update the code accordingly.
+</think>
+
+
 'use client'
 
 import { Montserrat } from 'next/font/google'
@@ -5,6 +39,7 @@ import { motion } from 'framer-motion'
 import React, { useState } from 'react'
 import { updateProfile } from './actions'
 import { Edit2, Check, X } from 'lucide-react'
+import Link from 'next/link'
 
 const montserrat = Montserrat({ subsets: ['latin'], weight: ['400','700'], variable: '--font-sans', display: 'swap' })
 
@@ -145,6 +180,15 @@ export default function DashboardClient({ initialProfile }: { initialProfile: Pr
             <Edit2 className="w-5 h-5 mr-2" />
             <span>Edit Profile</span>
           </button>
+          <Link href="/settings">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center justify-center w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full font-semibold shadow transition"
+            >
+              <span>Settings</span>
+            </motion.button>
+          </Link>
         </motion.div>
       )}
     </div>
