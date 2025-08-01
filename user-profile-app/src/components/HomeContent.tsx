@@ -3,7 +3,7 @@
 import { Montserrat } from 'next/font/google'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import React, { useState, useEffect } from 'react'
-import { Menu, X, TrendingUp, Clock, User, ArrowUp } from 'lucide-react'
+import { Menu, X, TrendingUp, Clock, User, ArrowUp, Sun, Moon } from 'lucide-react'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -23,6 +23,7 @@ const cardHover = {
 export default function HomeContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const { scrollY, scrollYProgress } = useScroll()
   const heroY = useTransform(scrollY, [0, 300], [0, 50])
 
@@ -32,12 +33,19 @@ export default function HomeContent() {
   }
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    }
+  }, []);
+
+  useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 10)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Prevent background scroll when mobile menu is open
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden'
@@ -46,6 +54,13 @@ export default function HomeContent() {
     }
     return () => { document.body.style.overflow = '' }
   }, [isMenuOpen])
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  }
 
   return (
     <div className={`${montserrat.variable} font-sans bg-black text-white flex flex-col overflow-hidden`}>
@@ -59,7 +74,6 @@ export default function HomeContent() {
       <header className={`sticky top-0 z-40 transition-colors duration-300 shadow-lg ${isScrolled ? 'bg-black' : 'bg-black/80 backdrop-blur-md'}`}>
         <div className="flex items-center justify-between px-6 py-4">
           <motion.div className="flex items-center gap-2">
-            {/* Logo/Icon removed */}
             <motion.h2
               initial="hidden"
               animate="visible"
@@ -107,6 +121,9 @@ export default function HomeContent() {
           </div>
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+          <button onClick={toggleTheme} aria-label="Toggle theme" className="ml-4 p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors">
+            {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
           </button>
         </div>
       </header>
