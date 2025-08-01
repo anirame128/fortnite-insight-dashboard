@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import HomeContent from '@/components/HomeContent'
+import Footer from '@/components/Footer' // Importing the Footer component
 
 export default async function Home() {
   const supabase = await createClient()
@@ -10,5 +11,10 @@ export default async function Home() {
     redirect('/dashboard')
   }
 
-  return <HomeContent />
+  return (
+    <>
+      <HomeContent />
+      <Footer /> {/* Including the Footer component */}
+    </>
+  )
 }
