@@ -1,10 +1,31 @@
+<think>
+Okay, I need to add a new settings navigation item to the existing Next.js app. Let me look at the original code to see where to make changes.
+
+First, I see that the navItems array is defined with two objects: Profile and Stats. I'll add a new object for Settings. The href should be '/dashboard/settings', and I'll need an appropriate icon. The original code uses Lucide icons, so I'll check if there's a suitable one for settings. I think Settings icon from Lucide-react would work.
+
+Next, I'll import the Settings icon. In the import statement, I'll add it alongside the others. So, I'll modify the import line to include Settings from 'lucide-react'.
+
+Now, I'll update the navItems array by adding a new object with name 'Settings', href '/dashboard/settings', and icon Settings.
+
+I should check if the href path is correct. Since the app uses Next.js App Router, the settings page should be located under dashboard/settings. I assume that the page exists or will be created, so the link should work.
+
+Looking at the existing code, the navigation items are rendered using a map function. Each item is a Link component. The new Settings item will follow the same pattern, so no changes are needed there beyond adding the new object to navItems.
+
+I also need to ensure that the icon is correctly displayed. The existing icons have a className of 'w-5 h-5', so I'll apply the same to the Settings icon.
+
+I should review the code for any potential issues, like duplicate keys or incorrect imports. The key for the new Link will be 'Settings', which is unique.
+
+Finally, I'll make sure that the code is formatted correctly and that all commas and brackets are properly placed to avoid syntax errors.
+</think>
+
+
 'use client'
 
 import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { User, BarChart, LogOut } from 'lucide-react'
+import { User, BarChart, LogOut, Settings } from 'lucide-react'
 import { logout } from './actions'
 import { toast } from 'react-hot-toast'
 
@@ -36,6 +57,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navItems = [
     { name: 'Profile', href: '/dashboard/profile', icon: User },
     { name: 'Stats', href: '/dashboard/fortnite', icon: BarChart },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ]
 
   return (
