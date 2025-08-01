@@ -4,7 +4,7 @@ import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { User, BarChart, LogOut } from 'lucide-react'
+import { User, BarChart, LogOut, Settings } from 'lucide-react'
 import { logout } from './actions'
 import { toast } from 'react-hot-toast'
 
@@ -35,11 +35,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navItems = [
     { name: 'Profile', href: '/dashboard/profile', icon: User },
-    { name: 'Stats', href: '/dashboard/fortnite', icon: BarChart },
+    { name: 'Stats', href: '/dashboard/stats', icon: BarChart },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ]
 
   return (
-    <div className={`${montserrat.variable} font-sans flex bg-gray-900 min-h-screen`}>      
+    <div className={`${montserrat.variable} font-sans flex bg-gray-900 min-h-screen`}>
       {/* Sidebar */}
       <aside className="w-64 bg-black/80 backdrop-blur-md p-6 flex flex-col">
         <motion.div
@@ -52,7 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <h1 className="text-2xl font-bold text-white">Fortnite Insights</h1>
         </motion.div>
         <nav className="flex-1 space-y-4">
-          {navItems.map(item => {
+          {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
@@ -82,7 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
-        <main className="flex-1 overflow-auto p-8">        
+        <main className="flex-1 overflow-auto p-8">
           {children}
         </main>
         <footer className="bg-black/80 text-gray-500 text-center py-4 border-t border-gray-800">
@@ -92,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             variants={fadeIn}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            © 2025 Fortnite Insights. All rights reserved.
+            &copy;2025 Fortnite Insights. All rights reserved.
           </motion.p>
         </footer>
       </div>
