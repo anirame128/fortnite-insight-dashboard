@@ -4,6 +4,7 @@ import { Montserrat } from 'next/font/google'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import React, { useState, useEffect } from 'react'
 import { Menu, X, TrendingUp, Clock, User, ArrowUp } from 'lucide-react'
+import ThemeToggle from './ThemeToggle' // <- NEW import
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -70,6 +71,7 @@ export default function HomeContent() {
               Fortnite Insights
             </motion.h2>
           </motion.div>
+
           <nav className="hidden md:flex space-x-6" aria-label="Main navigation">
             {['Features', 'Testimonials', 'Contact'].map(link => (
               <button
@@ -83,7 +85,8 @@ export default function HomeContent() {
               </button>
             ))}
           </nav>
-          <div className="hidden md:flex space-x-4">
+
+          <div className="hidden md:flex items-center space-x-4">
             <motion.a
               href="/login"
               initial="hidden"
@@ -104,12 +107,27 @@ export default function HomeContent() {
             >
               Sign Up
             </motion.a>
+
+            {/* ThemeToggle added here */}
+            <ThemeToggle />
           </div>
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+
+          <div className="flex items-center gap-3">
+            {/* ThemeToggle for mobile (optional) */}
+            <div className="md:hidden">
+              <ThemeToggle />
+            </div>
+            <button
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </header>
+
       {isMenuOpen && (
         <>
           <motion.div className="fixed inset-0 bg-black/60 z-30" onClick={() => setIsMenuOpen(false)} />
