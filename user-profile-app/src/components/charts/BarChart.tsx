@@ -1,152 +1,92 @@
-import { Bar } from 'react-chartjs-2'
+// user-profile-app/src/components/charts/BarChart.tsx
+import React, { useState, useEffect } from 'react';
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend,
-  TooltipItem
-} from 'chart.js'
-import { useRef } from 'react'
+} from 'chart.js';
+import { useRouter } from 'next/router';
+import { fetchDailyGainLoss, fetchHistoricalData } from '@/lib/api';
+import { useTheme } from '@/lib/hooks';
 
-// Register chart components
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend
-)
+);
 
-interface BarChartProps {
-  data: {
-    labels: string[]
-    datasets: {
-      label: string
-      data: (number | null)[]
-      backgroundColor?: string
-      borderColor?: string
-      borderWidth?: number
-      barPercentage?: number
-      categoryPercentage?: number
-    }[]
-  }
-  histTimestamps: number[]
-  histData: number[]
-  forecastData: {
-    forecastLabels: string[]
-    forecastData: number[]
-    forecastTimestamps: number[]
-  } | null
-  calculatePercentageChange: (current: number, previous: number) => number
-  determineTrend: (current: number, previous: number) => string
-  calculateMovingAverage: (data: number[], index: number, window?: number) => number
-  formatPercentage: (value: number) => string
-}
+const BarChart = () => {
+  const router = useRouter();
+  const { theme } = useTheme();
+  const [dailyGainLoss, setDailyGainLoss] = useState([]);
+  const [historicalData, setHistoricalData] = useState([]);
+  const [mounted, setMounted] = useState(false);
 
-export function BarChart({
-  data,
-  histTimestamps,
-  histData,
-  forecastData,
-  calculatePercentageChange,
-  determineTrend,
-  calculateMovingAverage,
-  formatPercentage
-}: BarChartProps) {
-  const chartRef = useRef<ChartJS<'bar'>>(null)
+  useEffect(() => {
+    setMounted(true);
+    const fetchDailyData = async () => {
+      const data = await fetchDailyGainLoss();
+      setDailyGainLoss(data);
+    };
+    const fetchHistorical = async () => {
+      const data = await fetchHistoricalData();
+      setHistoricalData(data);
+    };
+    fetchDailyData();
+    fetchHistorical();
+  }, []);
 
-  const tooltipCallbacks = {
-    title: (ctx: TooltipItem<'bar'>[]) => {
-      const idx = ctx[0].dataIndex
-      const date = new Date([...histTimestamps, ...(forecastData?.forecastTimestamps || [])][idx])
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
-      })
+  if (!mounted) return <div className="w-6 h-6" />;
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false,
+      },
     },
-    label: (ctx: TooltipItem<'bar'>) => {
-      const idx = ctx.dataIndex
-      const value = ctx.raw as number | null
-      const dataset = ctx.dataset.label
-      
-      if (value === null) return undefined
+    scales: {
+      y: {
+        ticks: {
+          callback: (value) => `${value}%`,
+        },
+      },
+    },
+  };
 
-      if (dataset === 'Forecast') {
-        return `Forecast: ${value.toLocaleString()} players`
-      }
-
-      const prevValue = idx > 0 ? histData[idx - 1] : null
-      const pctChange = prevValue ? calculatePercentageChange(value, prevValue) : 0
-      const trend = prevValue ? determineTrend(value, prevValue) : ''
-      const movingAvg = calculateMovingAverage(histData, idx)
-      
-      return [
-        `${dataset}: ${value.toLocaleString()} players`,
-        `Change: ${trend} ${formatPercentage(pctChange)}`,
-        `7-day Avg: ${Math.round(movingAvg).toLocaleString()} players`
-      ]
-    }
-  }
+  const data = {
+    labels: dailyGainLoss.map((item) => item.date),
+    datasets: [
+      {
+        label: 'Daily Gain/Loss',
+        data: dailyGainLoss.map((item) => item.percentage),
+        borderColor: theme === 'dark' ? 'rgb(255, 255, 255)' : 'rgb(0, 0, 0)',
+        backgroundColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
+      },
+      {
+        label: 'Historical Data',
+        data: historicalData.map((item) => item.percentage),
+        borderColor: theme === 'dark' ? 'rgb(255, 0, 0)' : 'rgb(0, 0, 255)',
+        backgroundColor: theme === 'dark' ? 'rgba(255, 0, 0, 0.5)' : 'rgba(0, 0, 255, 0.5)',
+      },
+    ],
+  };
 
   return (
-    <Bar
-      ref={chartRef}
-      data={data}
-      options={{
-        animation: {
-          duration: 1000,
-          easing: 'easeOutQuart'
-        },
-        interaction: {
-          mode: 'index',
-          intersect: false
-        },
-        layout: {
-          padding: { top: 10, right: 10, bottom: 10, left: 10 }
-        },
-        scales: {
-          x: {
-            title: { display: true, text: 'Date', color: '#fff', font: { size: 12 } },
-            grid: { color: 'rgba(255,255,255,0.1)' },
-            ticks: { 
-              color: 'rgba(255,255,255,0.7)',
-              maxRotation: 45,
-              minRotation: 45
-            }
-          },
-          y: {
-            title: { display: true, text: 'Peak Players', color: '#fff', font: { size: 12 } },
-            beginAtZero: true,
-            grid: { color: 'rgba(255,255,255,0.1)' },
-            ticks: { color: 'rgba(255,255,255,0.7)' }
-          }
-        },
-        plugins: {
-          legend: { 
-            labels: { 
-              color: '#fff',
-              usePointStyle: true,
-              pointStyle: 'circle'
-            } 
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-            backgroundColor: 'rgba(0,0,0,0.8)',
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            borderColor: 'rgba(255,255,255,0.1)',
-            borderWidth: 1,
-            padding: 12,
-            callbacks: tooltipCallbacks
-          }
-        }
-      }}
-    />
-  )
-} 
+    <div className="bg-[var(--background)] p-4 rounded-lg shadow-lg">
+      <Line options={options} data={data} />
+    </div>
+  );
+};
+
+export default BarChart;
