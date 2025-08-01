@@ -4,6 +4,7 @@ import { Montserrat } from 'next/font/google'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import React, { useState, useEffect } from 'react'
 import { Menu, X, TrendingUp, Clock, User, ArrowUp } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -83,7 +84,7 @@ export default function HomeContent() {
               </button>
             ))}
           </nav>
-          <div className="hidden md:flex space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             <motion.a
               href="/login"
               initial="hidden"
@@ -104,10 +105,16 @@ export default function HomeContent() {
             >
               Sign Up
             </motion.a>
+            <ThemeToggle />
           </div>
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="md:hidden">
+              <ThemeToggle />
+            </div>
+            <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </header>
       {isMenuOpen && (
@@ -246,7 +253,7 @@ export default function HomeContent() {
             { name: 'Jamie L.', quote: 'Instant insights and easy profile management make this tool a must-have for any creator.' }
           ].map((t, i) => (
             <motion.div variants={fadeInUp} key={i} className="p-8 bg-gray-800/60 rounded-2xl backdrop-blur-sm flex flex-col items-center">
-              <p className="italic text-gray-300 mb-4 text-center">“{t.quote}”</p>
+              <p className="italic text-gray-300 mb-4 text-center">" {t.quote} "</p>
               <p className="font-semibold text-white">— {t.name}</p>
             </motion.div>
           ))}
