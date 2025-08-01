@@ -4,7 +4,7 @@ import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { User, BarChart, LogOut } from 'lucide-react'
+import { User, BarChart, LogOut, Settings } from 'lucide-react'
 import { logout } from './actions'
 import { toast } from 'react-hot-toast'
 
@@ -36,6 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navItems = [
     { name: 'Profile', href: '/dashboard/profile', icon: User },
     { name: 'Stats', href: '/dashboard/fortnite', icon: BarChart },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings }, // New settings item
   ]
 
   return (
