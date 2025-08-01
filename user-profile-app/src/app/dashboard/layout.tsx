@@ -4,7 +4,7 @@ import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { User, BarChart, LogOut } from 'lucide-react'
+import { User, BarChart, LogOut, ExternalLink } from 'lucide-react'
 import { logout } from './actions'
 import { toast } from 'react-hot-toast'
 
@@ -70,6 +70,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
             )
           })}
+          <a
+            href="https://fortnite.gg/creative"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-3 px-4 py-2 rounded-lg transition text-gray-300 hover:bg-gray-800 hover:text-white"
+          >
+            <svg
+              className="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+            </svg>
+            <span className="font-medium">Creative Maps</span>
+            <ExternalLink className="w-4 h-4 ml-auto" />
+          </a>
           <button
             onClick={handleLogout}
             className="flex items-center space-x-3 px-4 py-2 rounded-lg transition w-full bg-red-600 hover:bg-red-500 text-white"
