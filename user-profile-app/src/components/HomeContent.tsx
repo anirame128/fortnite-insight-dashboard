@@ -4,6 +4,7 @@ import { Montserrat } from 'next/font/google'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import React, { useState, useEffect } from 'react'
 import { Menu, X, TrendingUp, Clock, User, ArrowUp } from 'lucide-react'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -105,6 +106,7 @@ export default function HomeContent() {
               Sign Up
             </motion.a>
           </div>
+          <ThemeToggle />
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
