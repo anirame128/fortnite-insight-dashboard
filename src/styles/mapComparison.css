@@ -1,0 +1,78 @@
+/* src/styles/mapComparison.css */
+
+/* Define CSS variables for light and dark modes */
+:root {
+  --map-background: #ffffff;
+  --map-foreground: #171717;
+  --map-hover: #cccccc;
+  --map-active: #aaaaaa;
+}
+
+.dark {
+  --map-background: #0a0a0a;
+  --map-foreground: #ededed;
+  --map-hover: #444444;
+  --map-active: #666666;
+}
+
+/* Map comparison container styles */
+.map-comparison-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: var(--map-background);
+  color: var(--map-foreground);
+}
+
+/* Map comparison item styles */
+.map-comparison-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--map-hover);
+  cursor: pointer;
+}
+
+.map-comparison-item:hover {
+  background-color: var(--map-hover);
+}
+
+.map-comparison-item:active {
+  background-color: var(--map-active);
+}
+
+/* Map comparison item label styles */
+.map-comparison-item-label {
+  font-size: 16px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+/* Map comparison item value styles */
+.map-comparison-item-value {
+  font-size: 16px;
+  color: var(--map-foreground);
+}
+
+/* Responsive design for different devices */
+@media only screen and (max-width: 768px) {
+  .map-comparison-container {
+    padding: 10px;
+  }
+  
+  .map-comparison-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .map-comparison-item-label {
+    font-size: 14px;
+    margin-right: 0;
+  }
+  
+  .map-comparison-item-value {
+    font-size: 14px;
+  }
+}
