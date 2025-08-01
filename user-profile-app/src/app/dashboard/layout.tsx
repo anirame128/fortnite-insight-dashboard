@@ -4,9 +4,10 @@ import { Montserrat } from 'next/font/google'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { User, BarChart, LogOut } from 'lucide-react'
+import { User, BarChart, LogOut, ExternalLink } from 'lucide-react'
 import { logout } from './actions'
 import { toast } from 'react-hot-toast'
+import CreativeMapsButton from '@/components/CreativeMapsButton'
 
 // Load Montserrat font
 const montserrat = Montserrat({
@@ -70,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
             )
           })}
+          <CreativeMapsButton />
           <button
             onClick={handleLogout}
             className="flex items-center space-x-3 px-4 py-2 rounded-lg transition w-full bg-red-600 hover:bg-red-500 text-white"
